@@ -9,7 +9,7 @@ $(function () {
     if (debug) {
         swarm.update();
     } else {
-        setInterval(swarm.update.bind(swarm), 35);
+        setInterval(swarm.update.bind(swarm), 24);
     }
 
     $("#canvas").click(function (e) {
@@ -59,6 +59,7 @@ Swarm.prototype = {
             } else if (i % 2 === 0) {
                 color = 'green';
             }
+            color = 'rgba(0,153,255,1)';
             this.drawParticle(this.particles[i], color);
         }
         
@@ -95,6 +96,9 @@ Swarm.prototype = {
          * @param {Vector} wayPoint where we're headed
          * @param {Particle} nearest particle 
          * */
+        
+        particle.trace();
+
         var v1 = new Vector(wayPoint.x - particle.x, wayPoint.y - particle.y),
             d1 = v1.squaredLength(),
             v2,
@@ -102,7 +106,7 @@ Swarm.prototype = {
             velocity = 0.01;
 
         if (d1 > 1) {
-            velocity = 0.02 * Math.sqrt(d1);
+            velocity = 0.015 * Math.sqrt(d1);
         } else {
             velocity = -0.1;
         }
@@ -124,11 +128,22 @@ Swarm.prototype = {
     },
 
     drawParticle: function (p, color) {
+        var i = 0, alpha = 1.0, t1, t2;
         this.canvas.circle(p.x, p.y, p.radius, color);
+        for (i = 1; i < p.numTracers; i += 1) {
+            t1 = p.trail[i - 1];
+            t2 = p.trail[i];
+            alpha = (p.numTracers - p.trail[i].age) / p.numTracers;
+            color = 'rgba(0,153,255,' + alpha + ')';
+            //draw a line between t1 and t2i
+            this.canvas.line(t1, t2, color);
+            //this.canvas.circle(p.trail[i].x, p.trail[i].y, p.radius, color);
+        }
     },
 
     drawWayPoint: function () {
-        this.canvas.circle(this.wayPoint.x, this.wayPoint.y, 5);
+        var alpha = 1, color = 'rgba(0,153,255,' + alpha + ')';
+        this.canvas.circle(this.wayPoint.x, this.wayPoint.y, 5, color);
     }
 
 };

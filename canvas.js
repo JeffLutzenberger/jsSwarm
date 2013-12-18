@@ -22,10 +22,11 @@ Canvas.prototype = {
         this.ctx.fill();
     },
     
-    line: function (x1, x2) {
+    line: function (p1, p2, color) {
+        this.ctx.strokeStyle = color;
         this.ctx.beginPath();
-        this.ctx.moveTo(x1.x * this.width, x1.y * this.height);
-        this.ctx.lineTo(x2.x * this.width, x2.y * this.height);
+        this.ctx.moveTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
         this.ctx.stroke();
     }
 };
