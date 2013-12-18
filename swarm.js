@@ -68,12 +68,6 @@ Swarm.prototype = {
         }
 
         for (i = 0; i < this.nParticles; i += 1) {
-            color = 'red';
-            if (i % 3 === 0) {
-                color = 'blue';
-            } else if (i % 2 === 0) {
-                color = 'green';
-            }
             color = 'rgba(0,153,255,1)';
             this.drawParticle(this.particles[i], color);
         }
