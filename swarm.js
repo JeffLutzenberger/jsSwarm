@@ -1,11 +1,10 @@
-/* global document: false */
 'use strict';
 
 $(function () {
-    /* global document, Canvas */
     var canvas = new Canvas($('canvas')[0]),
         swarm = new Swarm(canvas),
-        debug = false;
+        debug = false,
+        mouseDown = false;
     if (debug) {
         swarm.update();
     } else {
@@ -13,6 +12,23 @@ $(function () {
     }
 
     $("#canvas").click(function (e) {
+        var x = Math.floor((e.pageX - $("#canvas").offset().left)),
+            y = Math.floor((e.pageY - $("#canvas").offset().top));
+        swarm.wayPoint = new Vector(x, y);
+    });
+   
+    $("#canvas").mousedown(function () {
+        mouseDown = true;
+    });
+
+    $(document).mouseup(function () {
+        mouseDown = false;
+    });
+
+    $("#canvas").mousemove(function (e) {
+        if (mouseDown === false) {
+            return;
+        }
         var x = Math.floor((e.pageX - $("#canvas").offset().left)),
             y = Math.floor((e.pageY - $("#canvas").offset().top));
         swarm.wayPoint = new Vector(x, y);
@@ -115,12 +131,12 @@ Swarm.prototype = {
             d2 = v2.squaredLength();
             if (d2 < 100) {
                 v2 = v2.normalize();
-                v2 = v2.scalar_multiply(10);
+                v2 = v2.scalarMultiply(10);
             }
         }
-        v1 = v1.scalar_multiply(velocity);
+        v1 = v1.scalarMultiply(velocity);
         if (v2) {
-            v1 = v1.add_new(v2);
+            v1 = v1.addNew(v2);
         }
         particle.x += v1.x;
         particle.y += v1.y;
@@ -134,9 +150,7 @@ Swarm.prototype = {
             t2 = p.trail[i];
             alpha = (p.numTracers - p.trail[i].age) / p.numTracers;
             color = 'rgba(0,153,255,' + alpha + ')';
-            //draw a line between t1 and t2i
             this.canvas.line(t1, t2, color);
-            //this.canvas.circle(p.trail[i].x, p.trail[i].y, p.radius, color);
         }
     },
 
