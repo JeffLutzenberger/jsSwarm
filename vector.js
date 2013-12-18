@@ -7,7 +7,7 @@ var Vector = function (x, y) {
 
 Vector.prototype = {
 
-    add_new: function (v) {
+    addNew: function (v) {
         var nx, ny;
         nx = this.x + v.x;
         ny = this.y + v.y;
@@ -22,7 +22,7 @@ Vector.prototype = {
         return Math.sqrt(this.squaredLength());
     },
 
-    scalar_multiply: function (num) {
+    scalarMultiply: function (num) {
         this.x *= num;
         this.y *= num;
         return this;
