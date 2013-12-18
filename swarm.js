@@ -51,7 +51,6 @@ Swarm.prototype = {
             this.moveParticle(this.particles[i], this.wayPoint, nearest);
         }
 
-        //draw points
         for (i = 0; i < this.nParticles; i += 1) {
             color = 'red';
             if (i % 3 === 0) {
