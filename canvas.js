@@ -6,7 +6,6 @@ var Canvas = function (canvas) {
     this.ctx.fillStyle = this.ctx.strokeStyle = 'black';
     this.width = this.canvas.width;
     this.height = this.canvas.height;
- 
 };
 
 Canvas.prototype = {
@@ -15,13 +14,11 @@ Canvas.prototype = {
         this.ctx.clearRect(0, 0, this.width, this.height);
     },
     
-    circle: function (p, r) {
-        var x = p.x * this.width,
-            y = p.y * this.height;
-        this.ctx.fillStyle = 'black';
+    circle: function (x, y, r, color) {
+        this.ctx.fillStyle = color;
         this.ctx.beginPath();
         this.ctx.moveTo(x + r, y);
-        this.ctx.arc(p.x, p.y, r, 0, Math.PI * 2, false);
+        this.ctx.arc(x, y, r, 0, Math.PI * 2, false);
         this.ctx.fill();
     },
     

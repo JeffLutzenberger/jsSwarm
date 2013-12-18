@@ -4,136 +4,131 @@
 $(function () {
     /* global document, Canvas */
     var canvas = new Canvas($('canvas')[0]),
-        cloth = new Swarm(canvas),
-        inputs = {},
-        point,
-        key_down,
-        mouse_down,
-        mouse,
-        position = function (event) {
-            return canvas.adjust({
-                x: event.page.x,
-                y: event.page.y
-            });
-        },
-        setPoint = function (inv_mass) {
-            if (!point) {
-                return;
-            }
-            if (mouse) {
-                point.setCurrent(mouse);
-                point.setPrevious(mouse);
-            }
-            point.inv_mass = inv_mass;
-        };
-   /*  
-    document.addEvents({
-        'keydown': function (event) {
-            key_down = true;
-        },
-            
-        'keyup': function () {
-            key_down = false;
-        },
-                
-        'mousedown': function (event) {
-            mouse_down = true;
-            mouse = position(event);
-                    
-            if (!mouse) {
-                return;
-            }
+        swarm = new Swarm(canvas),
+        debug = false;
+    if (debug) {
+        swarm.update();
+    } else {
+        setInterval(swarm.update.bind(swarm), 35);
+    }
 
-            point = cloth.getClosestPoint(mouse);
-            setPoint(0);
-        },
-    
-        'mouseup': function (event) {
-            mouse_down = false;
-            if (mouse) {
-                setPoint(key_down ? 0 : 1);
-            }
-        },
-        
-        'mousemove': function (event) {
-            if (!mouse_down) {
-                return;
-            }
-                   
-            mouse = position(event);
-            setPoint(mouse ? 0 : 1);
-        }
+    $("#canvas").click(function (e) {
+        var x = Math.floor((e.pageX - $("#canvas").offset().left)),
+            y = Math.floor((e.pageY - $("#canvas").offset().top));
+        swarm.wayPoint = new Vector(x, y);
     });
-    */
-    //document.getElements('input').each(function (input) {
-    //    inputs[input.getProperty('id')] = input;
-    //});
-    
-    //inputs.points.addEvent('click', cloth.togglePoints.bind(cloth));
-    //inputs.constraints.addEvent('click', cloth.toggleConstraints.bind(cloth));
-    
-    //cloth.draw_points = inputs.points.checked;
-    //cloth.draw_constraints = inputs.constraints.checked;
-    
-    setInterval(cloth.update.bind(cloth), 35);
 });
 
 var Swarm = function (canvas) {
     
-    var i,
-        p;
-    this.nPoints = 50;
+    var i, p,
+        originX = 500,
+        originY = 500,
+        initialDispersion = 100;
     this.canvas = canvas;
-    this.points = [];
-    this.wayPoint = new Point(this.canvas, 100, 100);
+    this.nParticles = 100;
+    this.particles = [];
+    this.wayPoint = new Vector(100, 100);
 
-    for (i = 0; i < this.nPoints; i += 1) {
-        p = new Point(this.canvas, 400 + Math.random() * 100, 500 + Math.random() * 100);
-        this.points[i] = p;
+    for (i = 0; i < this.nParticles; i += 1) {
+        p = new Particle(originX + Math.random() * initialDispersion,
+                         originY + Math.random() * initialDispersion);
+        this.particles[i] = p;
     }
-
 };
 
 Swarm.prototype = {
     
     update: function () {
-        var i = 0, nearest;
+        var i = 0, nearest, color;
 
         this.canvas.clear();
         
-        //move each point 
-        for (i = 0; i < this.nPoints; i += 1) {
+        this.drawWayPoint();
+
+        for (i = 0; i < this.nParticles; i += 1) {
             nearest = this.nearestNeighbor(i);
-            //console.log(nearest);
-            this.points[i].move(this.wayPoint.current, nearest);
+            this.moveParticle(this.particles[i], this.wayPoint, nearest);
         }
 
         //draw points
-        for (i = 0; i < this.nPoints; i += 1) {
-            this.points[i].draw(this.canvas);
+        for (i = 0; i < this.nParticles; i += 1) {
+            color = 'red';
+            if (i % 3 === 0) {
+                color = 'blue';
+            } else if (i % 2 === 0) {
+                color = 'green';
+            }
+            this.drawParticle(this.particles[i], color);
         }
-        //var p = new Point(100, 100);
-        //this.canvas.circle(p.getCurrent(), 50);
-        //this.canvas.ctx.arc(100, 100, 10, 0, Math.PI * 2, false);
+        
     },
 
     nearestNeighbor: function (index) {
+        /**
+         * Find the particle closest to the particle at this index
+         * @param {integer} index of particle to test against
+         * @return {Particle} closest neighboring particle
+         * */
         var i = 0,
             minD = 1e6,
             nearest,
-            p1 = this.points[index],
-            v;
+            p = this.particles[index],
+            d = minD;
 
-        for (i = 0; i < this.nPoints; i += 1) {
+        for (i = 0; i < this.nParticles; i += 1) {
             if (i !== index) {
-                var v = p1.current.subtract_new(this.points[i].current);
-                //console.log(v);
-                if (v.squaredLength() < minD) {
-                    minD = v.squaredLength();
-                    nearest = this.points[i].current;
+                d = p.distanceSquared(this.particles[i]);
+                if (d < minD) {
+                    minD = d;
+                    nearest = this.particles[i];
                 }
             }
         }
         return nearest;
+    },
+
+    moveParticle: function (particle, wayPoint, nearestNeighbor) {
+        /**
+         * move our particle
+         * @param {Particle} the particle to move
+         * @param {Vector} wayPoint where we're headed
+         * @param {Particle} nearest particle 
+         * */
+        var v1 = new Vector(wayPoint.x - particle.x, wayPoint.y - particle.y),
+            d1 = v1.squaredLength(),
+            v2,
+            d2,
+            velocity = 0.01;
+
+        if (d1 > 1) {
+            velocity = 0.02 * Math.sqrt(d1);
+        } else {
+            velocity = -0.1;
+        }
+        v1 = v1.normalize();
+        if (nearestNeighbor) {
+            v2 = new Vector(nearestNeighbor.x - particle.x, nearestNeighbor.y - particle.y);
+            d2 = v2.squaredLength();
+            if (d2 < 100) {
+                v2 = v2.normalize();
+                v2 = v2.scalar_multiply(10);
+            }
+        }
+        v1 = v1.scalar_multiply(velocity);
+        if (v2) {
+            v1 = v1.add_new(v2);
+        }
+        particle.x += v1.x;
+        particle.y += v1.y;
+    },
+
+    drawParticle: function (p, color) {
+        this.canvas.circle(p.x, p.y, p.radius, color);
+    },
+
+    drawWayPoint: function () {
+        this.canvas.circle(this.wayPoint.x, this.wayPoint.y, 5);
     }
+
 };
